@@ -31,8 +31,12 @@ WORKDIR /usr/share/nginx/html
 # En Angular 17+ con application builder, la salida está en dist/project-name/browser
 COPY --from=build /app/dist/barberiapp-frontend/browser .
 
-# Copiar configuración de nginx
+# Copiar script de inicio y configuración de nginx
+COPY entrypoint.sh /entrypoint.sh
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Hacer el script ejecutable
+RUN chmod +x /entrypoint.sh
 
 # Verificar que los archivos se copiaron correctamente
 RUN ls -la /usr/share/nginx/html || (echo "Error: Files not copied" && exit 1)
@@ -40,5 +44,5 @@ RUN ls -la /usr/share/nginx/html || (echo "Error: Files not copied" && exit 1)
 # Exponer puerto
 EXPOSE 80
 
-# Comando de inicio
-CMD ["nginx", "-g", "daemon off;"]
+# Usar el script de inicio que inyecta variables de entorno
+CMD ["/entrypoint.sh"]
