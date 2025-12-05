@@ -14,6 +14,8 @@ import { User } from '@core/models/auth.model';
   styleUrls: ['./perfil.component.scss'],
 })
 export class PerfilComponent implements OnInit {
+
+  
   private readonly authService = inject(AuthService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly fb = inject(FormBuilder);
