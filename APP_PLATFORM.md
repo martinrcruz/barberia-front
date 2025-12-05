@@ -25,7 +25,9 @@ Esta guía explica cómo desplegar el frontend de BarberiApp en DigitalOcean App
 - **Name**: `barberiapp-frontend` (o el nombre que prefieras)
 - **Source Directory**: `frontend`
 - **Build Command**: `npm ci --legacy-peer-deps && npm run build`
-- **Run Command**: Dejar vacío o usar `/entrypoint.sh` (el Dockerfile ya tiene el CMD configurado)
+- **Run Command**: **DEJAR VACÍO** (el Dockerfile usa ENTRYPOINT, así que el script siempre se ejecuta)
+  - ⚠️ **IMPORTANTE**: Si configuras un Run Command, esto puede interferir con el ENTRYPOINT
+  - ✅ **Recomendado**: Dejar completamente vacío
 - **HTTP Port**: `80` (o el puerto que App Platform asigne - se maneja automáticamente con la variable PORT)
 
 #### Variables de Entorno

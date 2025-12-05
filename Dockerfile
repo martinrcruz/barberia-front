@@ -44,6 +44,6 @@ RUN ls -la /usr/share/nginx/html || (echo "Error: Files not copied" && exit 1)
 # Exponer puerto (App Platform puede usar cualquier puerto, se configura con variable PORT)
 EXPOSE 80
 
-# Usar el script de inicio que inyecta variables de entorno
-# El script maneja el puerto dinámicamente mediante la variable PORT
-CMD ["/entrypoint.sh"]
+# Usar ENTRYPOINT para que el script siempre se ejecute, incluso si App Platform sobrescribe CMD
+# Esto asegura que el script de configuración siempre se ejecute antes de nginx
+ENTRYPOINT ["/entrypoint.sh"]

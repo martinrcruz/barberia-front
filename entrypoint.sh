@@ -7,7 +7,22 @@ set -e
 # Valores por defecto
 API_URL=${API_URL:-/api}
 BACKEND_URL=${BACKEND_URL:-}
+
+# App Platform inyecta PORT automáticamente, pero puede estar en diferentes formatos
+# Intentar leer PORT de diferentes fuentes posibles
+if [ -z "$PORT" ]; then
+  # Intentar leer de otras variables comunes
+  PORT=${APP_PORT:-80}
+  PORT=${HTTP_PORT:-$PORT}
+  PORT=${LISTEN_PORT:-$PORT}
+fi
 PORT=${PORT:-80}
+
+# Asegurarse de que PORT es un número válido
+if ! echo "$PORT" | grep -qE '^[0-9]+$'; then
+  echo "WARNING: PORT no es un número válido: '$PORT', usando 80 por defecto"
+  PORT=80
+fi
 
 echo "=== Iniciando configuración del contenedor ==="
 echo "PORT: ${PORT}"
