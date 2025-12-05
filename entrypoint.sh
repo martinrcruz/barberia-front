@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # Script de inicio para App Platform de DigitalOcean
 # Inyecta variables de entorno en el index.html antes de iniciar nginx
@@ -6,8 +7,21 @@
 # Valores por defecto
 API_URL=${API_URL:-/api}
 BACKEND_URL=${BACKEND_URL:-}
+PORT=${PORT:-80}
+
+echo "=== Iniciando configuración del contenedor ==="
+echo "PORT: ${PORT}"
+echo "API_URL: ${API_URL}"
+echo "BACKEND_URL: ${BACKEND_URL:-'No configurado (sin proxy)'}"
+
+# Verificar que el directorio existe
+if [ ! -d "/usr/share/nginx/html" ]; then
+  echo "ERROR: Directorio /usr/share/nginx/html no existe"
+  exit 1
+fi
 
 # Crear archivo de configuración JavaScript que se cargará antes de Angular
+echo "Creando archivo env-config.js..."
 cat > /usr/share/nginx/html/env-config.js <<EOF
 window.__ENV__ = {
   apiUrl: '${API_URL}',
@@ -16,12 +30,20 @@ window.__ENV__ = {
 };
 EOF
 
+if [ ! -f "/usr/share/nginx/html/env-config.js" ]; then
+  echo "ERROR: No se pudo crear env-config.js"
+  exit 1
+fi
+
+echo "✓ Archivo env-config.js creado"
+
 # Si se proporciona BACKEND_URL, actualizar nginx.conf para usar proxy
 if [ -n "$BACKEND_URL" ]; then
+  echo "Configurando nginx con proxy al backend..."
   # Crear configuración de nginx con proxy
   cat > /etc/nginx/conf.d/default.conf <<NGINX_CONF
 server {
-    listen 80;
+    listen ${PORT};
     server_name localhost;
     root /usr/share/nginx/html;
     index index.html;
@@ -71,10 +93,11 @@ server {
 }
 NGINX_CONF
 else
+  echo "Configurando nginx sin proxy..."
   # Usar configuración sin proxy (para cuando el backend está en otro servicio)
   cat > /etc/nginx/conf.d/default.conf <<NGINX_CONF
 server {
-    listen 80;
+    listen ${PORT};
     server_name localhost;
     root /usr/share/nginx/html;
     index index.html;
@@ -107,10 +130,16 @@ server {
 NGINX_CONF
 fi
 
-echo "✓ Configuración completada:"
-echo "  - API_URL: ${API_URL}"
-echo "  - BACKEND_URL: ${BACKEND_URL:-'No configurado (sin proxy)'}"
+echo "✓ Configuración de nginx completada"
+echo "Verificando configuración de nginx..."
+nginx -t || {
+  echo "ERROR: La configuración de nginx es inválida"
+  exit 1
+}
 
-# Iniciar nginx
+echo "✓ Configuración de nginx válida"
+echo "=== Iniciando nginx en puerto ${PORT} ==="
+
+# Iniciar nginx en primer plano
 exec nginx -g "daemon off;"
 

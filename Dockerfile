@@ -41,8 +41,9 @@ RUN chmod +x /entrypoint.sh
 # Verificar que los archivos se copiaron correctamente
 RUN ls -la /usr/share/nginx/html || (echo "Error: Files not copied" && exit 1)
 
-# Exponer puerto
+# Exponer puerto (App Platform puede usar cualquier puerto, se configura con variable PORT)
 EXPOSE 80
 
 # Usar el script de inicio que inyecta variables de entorno
+# El script maneja el puerto dinámicamente mediante la variable PORT
 CMD ["/entrypoint.sh"]

@@ -25,8 +25,8 @@ Esta guía explica cómo desplegar el frontend de BarberiApp en DigitalOcean App
 - **Name**: `barberiapp-frontend` (o el nombre que prefieras)
 - **Source Directory**: `frontend`
 - **Build Command**: `npm ci --legacy-peer-deps && npm run build`
-- **Run Command**: `nginx -g "daemon off;"` (el entrypoint.sh se ejecutará automáticamente)
-- **HTTP Port**: `80`
+- **Run Command**: Dejar vacío o usar `/entrypoint.sh` (el Dockerfile ya tiene el CMD configurado)
+- **HTTP Port**: `80` (o el puerto que App Platform asigne - se maneja automáticamente con la variable PORT)
 
 #### Variables de Entorno
 
@@ -34,6 +34,7 @@ Configura las siguientes variables de entorno en App Platform:
 
 | Variable | Descripción | Ejemplo | Requerido |
 |----------|-------------|---------|-----------|
+| `PORT` | Puerto en el que nginx escuchará. App Platform lo configura automáticamente, pero puedes sobrescribirlo. | `80` o `8080` | No (por defecto: `80`) |
 | `API_URL` | URL base para las peticiones API. Si el backend está en el mismo dominio, usa `/api`. Si está en otro servicio, usa la URL completa. | `/api` o `https://api.tudominio.com/api` | No (por defecto: `/api`) |
 | `BACKEND_URL` | URL completa del backend para el proxy de nginx. Solo necesario si quieres usar el proxy integrado. | `http://backend:8080` o `https://api.tudominio.com` | No |
 
@@ -81,11 +82,14 @@ Después del despliegue:
 
 ## Solución de Problemas
 
-### La aplicación no carga
+### La aplicación no carga / Container Terminated
 
+- **Verifica los logs en App Platform** - El script entrypoint.sh ahora incluye logging detallado
 - Verifica que el build se completó correctamente
-- Revisa los logs en App Platform
-- Verifica que el puerto 80 está configurado correctamente
+- Asegúrate de que la variable `PORT` esté configurada o que App Platform la esté inyectando automáticamente
+- Verifica que el puerto HTTP en App Platform coincida con el que nginx está escuchando
+- Si el contenedor se termina inmediatamente, revisa los logs para ver en qué paso falla el script
+- Verifica que el directorio `/usr/share/nginx/html` existe y contiene los archivos compilados
 
 ### Las peticiones API fallan
 
