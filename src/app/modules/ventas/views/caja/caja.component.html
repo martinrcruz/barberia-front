@@ -1,0 +1,276 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Caja</h2>
+      <p class="text-muted mb-0">Registra ventas en tiempo real</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <form [formGroup]="formulario">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label class="form-label">Sucursal</label>
+                <select class="form-select" formControlName="sucursalId" (change)="onSucursalChange()">
+                  <option [ngValue]="null">Seleccione sucursal</option>
+                  <option *ngFor="let s of sucursales" [ngValue]="s.id">{{ s.nombre }}</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Trabajador</label>
+                <select class="form-select" formControlName="trabajadorId">
+                  <option [ngValue]="null">Seleccione trabajador</option>
+                  <option
+                    *ngFor="let t of trabajadores"
+                    [ngValue]="t.id"
+                  >
+                    {{ t.nombreCompleto || (t.nombre + ' ' + t.apellido) }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Método de pago</label>
+                <select class="form-select" formControlName="metodoPago">
+                  <option [ngValue]="null" *ngIf="metodosPago.length === 0">Cargando métodos de pago...</option>
+                  <option *ngFor="let mp of metodosPago" [ngValue]="mp.value">{{ mp.label }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <label class="form-label">Cliente (opcional)</label>
+                <div class="input-group">
+                  <select class="form-select" formControlName="clienteId">
+                    <option [ngValue]="null">Sin cliente asignado</option>
+                    <option *ngFor="let c of clientes" [ngValue]="c.id">
+                      {{ c.nombreCompleto }} <span *ngIf="c.rut">({{ c.rut }})</span>
+                    </option>
+                  </select>
+                  <button class="btn btn-outline-primary" type="button" (click)="abrirModalCliente()" title="Registrar nuevo cliente">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-4 d-flex align-items-end">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="incluyeIva" formControlName="incluyeIva" />
+                  <label class="form-check-label" for="incluyeIva">
+                    Incluir IVA en la venta
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Observaciones</label>
+              <textarea class="form-control" rows="2" formControlName="observaciones"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Detalle de la venta</span>
+            <button class="btn btn-sm btn-outline-primary" type="button" (click)="agregarDetalle()">
+              <i class="bi bi-plus-lg me-1"></i> Agregar ítem
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table mb-0 align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 10%">Tipo</th>
+                    <th style="width: 25%">Producto / Descripción</th>
+                    <th style="width: 15%">Cantidad</th>
+                    <th style="width: 15%">Precio unitario</th>
+                    <th style="width: 15%">IVA</th>
+                    <th style="width: 15%">Subtotal</th>
+                    <th style="width: 5%"></th>
+                  </tr>
+                </thead>
+                <tbody formArrayName="detalles">
+                  <tr *ngFor="let detalle of detalles.controls; let i = index" [formGroupName]="i">
+                    <td>
+                      <select class="form-select form-select-sm" formControlName="tipoItem" (change)="onTipoItemChange(i)">
+                        <option value="PRODUCTO">Producto</option>
+                        <option value="SERVICIO">Servicio</option>
+                      </select>
+                    </td>
+                    <td>
+                      <ng-container *ngIf="detalle.get('tipoItem')?.value === 'PRODUCTO'; else servicioInput">
+                        <select class="form-select form-select-sm" formControlName="productoId" (change)="onProductoChange(i)">
+                          <option [ngValue]="null">Seleccione producto</option>
+                          <option *ngFor="let p of productos" [ngValue]="p.id">
+                            {{ p.nombre }} ({{ formatearPrecio(p.precioVenta) }})
+                          </option>
+                        </select>
+                      </ng-container>
+                      <ng-template #servicioInput>
+                        <div>
+                          <select class="form-select form-select-sm mb-2" formControlName="servicioId" (change)="onServicioChange(i)">
+                            <option [ngValue]="null">Seleccione servicio existente</option>
+                            <option *ngFor="let s of servicios" [ngValue]="s.id">
+                              {{ s.nombre }} ({{ formatearPrecio(s.precio) }})
+                            </option>
+                            <option *ngIf="servicios.length === 0" [ngValue]="null" disabled>No hay servicios disponibles para esta sucursal</option>
+                            <option [ngValue]="null" disabled>--- O ingrese manualmente ---</option>
+                          </select>
+                          <input type="text" class="form-control form-control-sm" formControlName="descripcion" placeholder="Descripción del servicio (si no seleccionó uno existente)" />
+                        </div>
+                      </ng-template>
+                    </td>
+                    <td>
+                      <input type="number" min="1" class="form-control form-control-sm" formControlName="cantidad" />
+                    </td>
+                    <td>
+                      <input type="number" min="0" class="form-control form-control-sm" formControlName="precioUnitario" />
+                    </td>
+                    <td>
+                      <div class="form-check form-switch d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" formControlName="aplicaIva" />
+                      </div>
+                    </td>
+                    <td>
+                      {{ formatearPrecio((detalle.get('cantidad')?.value || 0) * (detalle.get('precioUnitario')?.value || 0)) }}
+                    </td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-outline-danger" type="button" (click)="eliminarDetalle(i)" [disabled]="detalles.length === 1">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Resumen</h5>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Subtotal</span>
+            <strong>{{ formatearPrecio(subtotalCalculado) }}</strong>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>IVA</span>
+            <strong>{{ formatearPrecio(ivaCalculado) }}</strong>
+          </div>
+          <hr />
+          <div class="d-flex justify-content-between mb-3">
+            <span class="fs-5">Total</span>
+            <strong class="fs-5 text-success">{{ formatearPrecio(totalCalculado) }}</strong>
+          </div>
+
+          <div *ngIf="error" class="alert alert-danger py-2">
+            {{ error }}
+          </div>
+          <div *ngIf="mensaje" class="alert alert-success py-2">
+            {{ mensaje }}
+          </div>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" type="button" (click)="guardarVenta()" [disabled]="guardando">
+              <span *ngIf="!guardando"><i class="bi bi-check-lg me-1"></i> Registrar venta</span>
+              <span *ngIf="guardando">
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Guardando...
+              </span>
+            </button>
+            <button class="btn btn-outline-secondary" type="button" (click)="limpiarFormulario()">
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de registro de cliente -->
+  <div
+    class="modal fade show d-block"
+    *ngIf="mostrarModalCliente"
+    style="background-color: rgba(0,0,0,0.5);"
+    tabindex="-1"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Nuevo Cliente</h5>
+          <button type="button" class="btn-close" (click)="cerrarModalCliente()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger" *ngIf="errorCliente" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {{ errorCliente }}
+          </div>
+          <form [formGroup]="formularioCliente">
+            <div class="mb-3">
+              <label class="form-label">Nombre Completo <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="nombreCompleto" />
+              <small class="text-danger" *ngIf="getFieldErrorCliente('nombreCompleto')">
+                {{ getFieldErrorCliente('nombreCompleto') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">RUT</label>
+              <input type="text" class="form-control" formControlName="rut" />
+              <small class="text-danger" *ngIf="getFieldErrorCliente('rut')">
+                {{ getFieldErrorCliente('rut') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" formControlName="email" />
+              <small class="text-danger" *ngIf="getFieldErrorCliente('email')">
+                {{ getFieldErrorCliente('email') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Teléfono</label>
+              <input type="text" class="form-control" formControlName="telefono" />
+              <small class="text-danger" *ngIf="getFieldErrorCliente('telefono')">
+                {{ getFieldErrorCliente('telefono') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Dirección</label>
+              <input type="text" class="form-control" formControlName="direccion" />
+              <small class="text-danger" *ngIf="getFieldErrorCliente('direccion')">
+                {{ getFieldErrorCliente('direccion') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Observaciones</label>
+              <textarea class="form-control" rows="2" formControlName="observaciones"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarModalCliente()" [disabled]="guardandoCliente">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" (click)="guardarCliente()" [disabled]="guardandoCliente">
+            <span *ngIf="!guardandoCliente">
+              <i class="bi bi-check-lg me-1"></i> Guardar
+            </span>
+            <span *ngIf="guardandoCliente">
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Guardando...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

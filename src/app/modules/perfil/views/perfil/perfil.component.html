@@ -1,0 +1,187 @@
+<div class="perfil-container" *ngIf="currentUser() as user">
+  <div class="perfil-header">
+    <h2>Mi Perfil</h2>
+    <button 
+      *ngIf="!editMode()" 
+      class="btn-editar" 
+      (click)="toggleEditMode()"
+      type="button">
+      <i class="bi bi-pencil"></i> Editar Perfil
+    </button>
+  </div>
+
+  <div class="perfil-content">
+    <!-- Foto de Perfil y Datos Básicos -->
+    <div class="perfil-card" [formGroup]="perfilForm">
+      <div class="perfil-avatar-section">
+        <div class="perfil-avatar" [class.has-photo]="user.fotoPerfil">
+          <img *ngIf="user.fotoPerfil" [src]="user.fotoPerfil" [alt]="nombreCompleto()" />
+          <i *ngIf="!user.fotoPerfil" class="bi bi-person-circle"></i>
+        </div>
+        <div class="perfil-info">
+          <h3>{{ nombreCompleto() }}</h3>
+          <p class="perfil-email">{{ user.email }}</p>
+          <div class="perfil-badges">
+            <span class="badge" *ngFor="let rol of user.roles">{{ rol }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información Personal -->
+      <div class="perfil-seccion">
+        <h4>Información Personal</h4>
+        <div class="perfil-detalles">
+          <div class="detalle">
+            <span class="label">Nombre:</span>
+            <span class="valor">{{ user.nombre }}</span>
+          </div>
+          <div class="detalle">
+            <span class="label">Apellido:</span>
+            <span class="valor">{{ user.apellido }}</span>
+          </div>
+          <div class="detalle" *ngIf="user.rut">
+            <span class="label">RUT:</span>
+            <span class="valor">{{ user.rut }}</span>
+          </div>
+          <div class="detalle" *ngIf="user.telefono">
+            <span class="label">Teléfono:</span>
+            <span class="valor" *ngIf="!editMode()">{{ user.telefono }}</span>
+            <input 
+              *ngIf="editMode()" 
+              type="tel" 
+              formControlName="telefono" 
+              class="form-control"
+              placeholder="Teléfono" />
+          </div>
+          <div class="detalle" *ngIf="user.direccion || editMode()">
+            <span class="label">Dirección:</span>
+            <span class="valor" *ngIf="!editMode()">{{ user.direccion || 'No especificada' }}</span>
+            <input 
+              *ngIf="editMode()" 
+              type="text" 
+              formControlName="direccion" 
+              class="form-control"
+              placeholder="Dirección" />
+          </div>
+          <div class="detalle" *ngIf="user.nacionalidad || editMode()">
+            <span class="label">Nacionalidad:</span>
+            <span class="valor" *ngIf="!editMode()">{{ user.nacionalidad || 'No especificada' }}</span>
+            <input 
+              *ngIf="editMode()" 
+              type="text" 
+              formControlName="nacionalidad" 
+              class="form-control"
+              placeholder="Nacionalidad" />
+          </div>
+          <div class="detalle" *ngIf="editMode()">
+            <span class="label">Foto de Perfil (URL):</span>
+            <input 
+              type="url" 
+              formControlName="fotoPerfil" 
+              class="form-control"
+              placeholder="https://ejemplo.com/foto.jpg" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Información Administrativa (Solo visible para admin o si es admin) -->
+      <div class="perfil-seccion" *ngIf="esAdmin()">
+        <h4>Información Administrativa</h4>
+        <div class="perfil-detalles">
+          <div class="detalle">
+            <span class="label">Email:</span>
+            <span class="valor">{{ user.email }}</span>
+            <span class="info-text">(Solo admin puede editar)</span>
+          </div>
+          <div class="detalle" *ngIf="user.porcentajeComision !== null && user.porcentajeComision !== undefined">
+            <span class="label">Porcentaje de Comisión:</span>
+            <span class="valor">{{ user.porcentajeComision }}%</span>
+            <span class="info-text">(Solo admin puede editar)</span>
+          </div>
+          <div class="detalle">
+            <span class="label">Tiempo de Antigüedad:</span>
+            <span class="valor">{{ calcularTiempoAntiguedad() }}</span>
+            <span class="info-text">(Solo admin puede modificar)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Edición -->
+      <div class="perfil-acciones" *ngIf="editMode()">
+        <div class="error-message" *ngIf="error()">
+          {{ error() }}
+        </div>
+        <div class="acciones-buttons">
+          <button 
+            class="btn btn-primary" 
+            (click)="guardarPerfil()" 
+            [disabled]="loading() || !perfilForm.valid"
+            type="button">
+            <span *ngIf="!loading()">Guardar Cambios</span>
+            <span *ngIf="loading()">Guardando...</span>
+          </button>
+          <button 
+            class="btn btn-secondary" 
+            (click)="cancelarEdicion()" 
+            [disabled]="loading()"
+            type="button">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="estadisticas-card" *ngIf="user.id">
+      <h4>Estadísticas</h4>
+      <div class="estadisticas-content" *ngIf="!cargandoEstadisticas() && estadisticas(); else loadingEstadisticas">
+        <div class="estadistica-item">
+          <div class="estadistica-icon">
+            <i class="bi bi-cash-stack"></i>
+          </div>
+          <div class="estadistica-info">
+            <span class="estadistica-label">Ganancia Promedio Mensual</span>
+            <span class="estadistica-valor">{{ formatearMoneda(estadisticas()?.gananciaPromedioMensual) }}</span>
+          </div>
+        </div>
+        <div class="estadistica-item">
+          <div class="estadistica-icon">
+            <i class="bi bi-cart-check"></i>
+          </div>
+          <div class="estadistica-info">
+            <span class="estadistica-label">Total de Ventas</span>
+            <span class="estadistica-valor">{{ estadisticas()?.totalVentas || 0 }}</span>
+          </div>
+        </div>
+        <div class="estadistica-item">
+          <div class="estadistica-icon">
+            <i class="bi bi-graph-up"></i>
+          </div>
+          <div class="estadistica-info">
+            <span class="estadistica-label">Ganancia Total</span>
+            <span class="estadistica-valor">{{ formatearMoneda(estadisticas()?.totalGanancia) }}</span>
+          </div>
+        </div>
+      </div>
+      <ng-template #loadingEstadisticas>
+        <div class="loading-estadisticas">
+          <span>Cargando estadísticas...</span>
+        </div>
+      </ng-template>
+
+      <!-- Servicios Favoritos -->
+      <div class="servicios-favoritos" *ngIf="estadisticas()?.serviciosFavoritos && estadisticas()!.serviciosFavoritos.length > 0">
+        <h5>Servicios Favoritos</h5>
+        <div class="servicios-list">
+          <div class="servicio-item" *ngFor="let servicio of estadisticas()!.serviciosFavoritos">
+            <span class="servicio-nombre">{{ servicio.servicioNombre }}</span>
+            <span class="servicio-cantidad">{{ servicio.cantidadVentas }} ventas</span>
+          </div>
+        </div>
+      </div>
+      <div class="sin-servicios" *ngIf="estadisticas()?.serviciosFavoritos && estadisticas()!.serviciosFavoritos.length === 0">
+        <p>No hay servicios favoritos aún</p>
+      </div>
+    </div>
+  </div>
+</div>

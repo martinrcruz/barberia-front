@@ -1,0 +1,209 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Gestión de Productos</h2>
+      <p class="text-muted mb-0">Administra el inventario de productos</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirFormularioCrear()" [disabled]="cargando">
+      <i class="bi bi-plus-circle me-2"></i>
+      Nuevo Producto
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row align-items-end">
+        <div class="col-md-4">
+          <label for="filtroSucursal" class="form-label">Filtrar por Sucursal</label>
+          <select class="form-select" id="filtroSucursal" [(ngModel)]="filtroSucursal" (change)="filtrarPorSucursal()">
+            <option [value]="null">Todas las sucursales</option>
+            <option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary w-100" (click)="limpiarFiltro()" *ngIf="filtroSucursal">
+            <i class="bi bi-x-circle me-2"></i>
+            Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerta de error -->
+  <div class="alert alert-danger" *ngIf="error" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Tabla de productos -->
+  <div class="card" *ngIf="!cargando && productos.length > 0">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Sucursal</th>
+              <th>Precio Venta</th>
+              <th>Stock</th>
+              <th>Stock Mínimo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let producto of productos">
+              <td><strong>{{ producto.codigo }}</strong></td>
+              <td>{{ producto.nombre }}</td>
+              <td>
+                <small class="text-muted">{{ producto.descripcion || '-' }}</small>
+              </td>
+              <td>{{ producto.sucursal.nombre || '-' }}</td>
+              <td>{{ formatearPrecio(producto.precioVenta) }}</td>
+              <td>
+                <span [class.text-danger]="producto.stockBajo" [class.text-success]="!producto.stockBajo">
+                  {{ producto.stockActual }}
+                </span>
+              </td>
+              <td>{{ producto.stockMinimo }}</td>
+              <td>
+                <span class="badge" [class.bg-danger]="producto.stockBajo" [class.bg-success]="!producto.stockBajo">
+                  {{ producto.stockBajo ? 'Stock Bajo' : 'Disponible' }}
+                </span>
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-outline-primary" (click)="abrirFormularioEditar(producto)" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="eliminar(producto)" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="card" *ngIf="!cargando && productos.length === 0">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-box-seam fs-1 text-muted mb-3"></i>
+      <h5>No hay productos registrados</h5>
+      <p class="text-muted">Comienza creando tu primer producto</p>
+      <button class="btn btn-primary" (click)="abrirFormularioCrear()">
+        <i class="bi bi-plus-circle me-2"></i>
+        Crear Producto
+      </button>
+    </div>
+  </div>
+
+  <!-- Cargando -->
+  <div class="text-center py-5" *ngIf="cargando">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <!-- Modal de formulario -->
+  <div class="modal fade show d-block" *ngIf="mostrarFormulario" style="background-color: rgba(0,0,0,0.5);" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            {{ modoEdicion ? 'Editar Producto' : 'Nuevo Producto' }}
+          </h5>
+          <button type="button" class="btn-close" (click)="cerrarFormulario()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="formulario" (ngSubmit)="guardar()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="codigo" class="form-label">Código <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="codigo" formControlName="codigo" [class.is-invalid]="formulario.get('codigo')?.invalid && formulario.get('codigo')?.touched">
+                <div class="invalid-feedback" *ngIf="formulario.get('codigo')?.invalid && formulario.get('codigo')?.touched">
+                  {{ getFieldError('codigo') }}
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="nombre" formControlName="nombre" [class.is-invalid]="formulario.get('nombre')?.invalid && formulario.get('nombre')?.touched">
+                <div class="invalid-feedback" *ngIf="formulario.get('nombre')?.invalid && formulario.get('nombre')?.touched">
+                  {{ getFieldError('nombre') }}
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="descripcion" class="form-label">Descripción</label>
+              <textarea class="form-control" id="descripcion" formControlName="descripcion" rows="2"></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="precioVenta" class="form-label">Precio Venta <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="precioVenta" formControlName="precioVenta" min="0" step="0.01" [class.is-invalid]="formulario.get('precioVenta')?.invalid && formulario.get('precioVenta')?.touched">
+                <div class="invalid-feedback" *ngIf="formulario.get('precioVenta')?.invalid && formulario.get('precioVenta')?.touched">
+                  {{ getFieldError('precioVenta') }}
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="precioCosto" class="form-label">Precio Costo</label>
+                <input type="number" class="form-control" id="precioCosto" formControlName="precioCosto" min="0" step="0.01">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="sucursalId" class="form-label">Sucursal <span class="text-danger">*</span></label>
+                <select class="form-select" id="sucursalId" formControlName="sucursalId" [class.is-invalid]="formulario.get('sucursalId')?.invalid && formulario.get('sucursalId')?.touched">
+                  <option [value]="null">Seleccione una sucursal</option>
+                  <option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</option>
+                </select>
+                <div class="invalid-feedback" *ngIf="formulario.get('sucursalId')?.invalid && formulario.get('sucursalId')?.touched">
+                  {{ getFieldError('sucursalId') }}
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="stockActual" class="form-label">Stock Actual</label>
+                <input type="number" class="form-control" id="stockActual" formControlName="stockActual" min="0">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="stockMinimo" class="form-label">Stock Mínimo</label>
+                <input type="number" class="form-control" id="stockMinimo" formControlName="stockMinimo" min="0">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="unidadMedida" class="form-label">Unidad de Medida</label>
+                <input type="text" class="form-control" id="unidadMedida" formControlName="unidadMedida" placeholder="Ej: unidad, kg, litro">
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="tieneIva" formControlName="tieneIva">
+                <label class="form-check-label" for="tieneIva">
+                  Aplica IVA
+                </label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="imagenUrl" class="form-label">URL de Imagen</label>
+              <input type="url" class="form-control" id="imagenUrl" formControlName="imagenUrl" placeholder="https://...">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarFormulario()" [disabled]="cargando">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="cargando || formulario.invalid">
+            <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2"></span>
+            {{ modoEdicion ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

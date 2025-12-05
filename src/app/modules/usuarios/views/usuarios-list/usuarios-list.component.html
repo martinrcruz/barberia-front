@@ -1,0 +1,216 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Gestión de Usuarios</h2>
+      <p class="text-muted mb-0">Administra los usuarios del sistema</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirFormularioCrear()" [disabled]="cargando">
+      <i class="bi bi-plus-circle me-2"></i>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Alerta de error -->
+  <div class="alert alert-danger" *ngIf="error" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div class="card" *ngIf="!cargando && usuarios.length > 0">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Nombre Completo</th>
+              <th>Email</th>
+              <th>RUT</th>
+              <th>Teléfono</th>
+              <th>Roles</th>
+              <th>Estado</th>
+              <th>Cuenta</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let usuario of usuarios">
+              <td><strong>{{ usuario.nombreCompleto }}</strong></td>
+              <td>{{ usuario.email }}</td>
+              <td>{{ usuario.rut || '-' }}</td>
+              <td>{{ usuario.telefono || '-' }}</td>
+              <td>
+                <span class="badge bg-secondary me-1" *ngFor="let rol of usuario.roles">
+                  {{ rol.nombre }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class.bg-success]="usuario.activo" [class.bg-danger]="!usuario.activo">
+                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class.bg-warning]="usuario.cuentaBloqueada" [class.bg-success]="!usuario.cuentaBloqueada">
+                  {{ usuario.cuentaBloqueada ? 'Bloqueada' : 'Desbloqueada' }}
+                </span>
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-outline-primary" (click)="abrirFormularioEditar(usuario)" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm" 
+                          [class.btn-outline-success]="!usuario.activo" 
+                          [class.btn-outline-warning]="usuario.activo"
+                          (click)="activarDesactivar(usuario)" 
+                          [title]="usuario.activo ? 'Desactivar' : 'Activar'">
+                    <i class="bi" [ngClass]="usuario.activo ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
+                  </button>
+                  <button class="btn btn-sm" 
+                          [class.btn-outline-warning]="!usuario.cuentaBloqueada" 
+                          [class.btn-outline-danger]="usuario.cuentaBloqueada"
+                          (click)="bloquearDesbloquear(usuario)" 
+                          [title]="usuario.cuentaBloqueada ? 'Desbloquear' : 'Bloquear'">
+                    <i class="bi" [ngClass]="usuario.cuentaBloqueada ? 'bi-lock-fill' : 'bi-unlock'"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="eliminar(usuario)" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="card" *ngIf="!cargando && usuarios.length === 0">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-people fs-1 text-muted mb-3"></i>
+      <h5>No hay usuarios registrados</h5>
+      <p class="text-muted">Comienza creando tu primer usuario</p>
+      <button class="btn btn-primary" (click)="abrirFormularioCrear()">
+        <i class="bi bi-plus-circle me-2"></i>
+        Crear Usuario
+      </button>
+    </div>
+  </div>
+
+  <!-- Cargando -->
+  <div class="text-center py-5" *ngIf="cargando">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <!-- Modal de formulario -->
+  <div class="modal fade show d-block" *ngIf="mostrarFormulario" style="background-color: rgba(0,0,0,0.5);" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            {{ modoEdicion ? 'Editar Usuario' : 'Nuevo Usuario' }}
+          </h5>
+          <button type="button" class="btn-close" (click)="cerrarFormulario()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="formulario" (ngSubmit)="guardar()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="nombre" formControlName="nombre" [class.is-invalid]="formulario.get('nombre')?.invalid && formulario.get('nombre')?.touched">
+                <div class="invalid-feedback" *ngIf="formulario.get('nombre')?.invalid && formulario.get('nombre')?.touched">
+                  {{ getFieldError('nombre') }}
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="apellido" class="form-label">Apellido <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="apellido" formControlName="apellido" [class.is-invalid]="formulario.get('apellido')?.invalid && formulario.get('apellido')?.touched">
+                <div class="invalid-feedback" *ngIf="formulario.get('apellido')?.invalid && formulario.get('apellido')?.touched">
+                  {{ getFieldError('apellido') }}
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="email" formControlName="email" [class.is-invalid]="formulario.get('email')?.invalid && formulario.get('email')?.touched">
+                <div class="invalid-feedback" *ngIf="formulario.get('email')?.invalid && formulario.get('email')?.touched">
+                  {{ getFieldError('email') }}
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="password" class="form-label">
+                  Contraseña 
+                  <span class="text-danger" *ngIf="!modoEdicion">*</span>
+                  <small class="text-muted" *ngIf="modoEdicion">(dejar vacío para no cambiar)</small>
+                </label>
+                <input type="password" class="form-control" id="password" formControlName="password" [class.is-invalid]="formulario.get('password')?.invalid && formulario.get('password')?.touched">
+                <div class="invalid-feedback" *ngIf="formulario.get('password')?.invalid && formulario.get('password')?.touched">
+                  {{ getFieldError('password') }}
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="rut" class="form-label">RUT</label>
+                <input type="text" class="form-control" id="rut" formControlName="rut" placeholder="12345678-9">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input type="text" class="form-control" id="telefono" formControlName="telefono" placeholder="+56 9 1234 5678">
+              </div>
+            </div>
+            <div class="row" *ngIf="tieneRolTrabajadorSeleccionado()">
+              <div class="col-md-6 mb-3">
+                <label for="porcentajeComision" class="form-label">
+                  Porcentaje de comisión del trabajador
+                </label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="porcentajeComision"
+                    formControlName="porcentajeComision"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    placeholder="Ej: 15"
+                  >
+                  <span class="input-group-text">%</span>
+                </div>
+                <small class="text-muted">
+                  Solo aplica si el usuario tiene rol TRABAJADOR. Se usará para calcular la comisión sobre el total de la venta.
+                </small>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Roles</label>
+              <div class="form-check" *ngFor="let rol of rolesDisponibles">
+                <input class="form-check-input" type="checkbox" [value]="rol.id" 
+                       [id]="'rol-' + rol.id"
+                       [checked]="formulario.get('rolesIds')?.value?.includes(rol.id)"
+                       (change)="toggleRol(rol.id)">
+                <label class="form-check-label" [for]="'rol-' + rol.id">
+                  {{ rol.nombre }} <small class="text-muted">({{ rol.codigo }})</small>
+                </label>
+              </div>
+              <small class="text-muted" *ngIf="rolesDisponibles.length === 0">
+                No hay roles disponibles. Los roles se cargarán automáticamente.
+              </small>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarFormulario()" [disabled]="cargando">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="guardar()" [disabled]="cargando || formulario.invalid">
+            <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2"></span>
+            {{ modoEdicion ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

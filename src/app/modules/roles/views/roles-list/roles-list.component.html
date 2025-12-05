@@ -1,0 +1,139 @@
+<div class="roles-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1><i class="bi bi-shield-check"></i> Gestión de Roles</h1>
+      <p class="text-muted">Administra los roles y permisos del sistema</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        *hasPermission="'ROL_CREAR'" 
+        class="btn btn-primary"
+        (click)="nuevoRol()">
+        <i class="bi bi-plus-circle"></i> Nuevo Rol
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <app-data-table
+        [columns]="tableColumns"
+        [data]="roles"
+        [actions]="tableActions"
+        [loading]="loading"
+        [paginated]="true"
+        [pageSize]="pageSize"
+        [totalRecords]="totalRecords"
+        [currentPage]="currentPage"
+        (pageChange)="onPageChange($event)"
+      ></app-data-table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para clonar rol -->
+<app-modal 
+  #clonarModal
+  title="Clonar Rol"
+  size="md"
+  confirmText="Clonar"
+  [loading]="clonarLoading"
+  (confirm)="clonarRol()">
+  <div class="modal-body-content">
+    <p>Se creará una copia del rol <strong>{{ rolAClonar?.nombre }}</strong> con todos sus permisos.</p>
+    <div class="mb-3">
+      <label class="form-label">Nombre del nuevo rol:</label>
+      <input 
+        type="text" 
+        class="form-control" 
+        [(ngModel)]="nombreNuevoRol"
+        placeholder="Ingrese el nombre del nuevo rol"
+      >
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal para gestionar permisos -->
+<app-modal 
+  #permisosModal
+  title="Gestionar Permisos"
+  size="xl"
+  confirmText="Guardar Permisos"
+  [loading]="permisosLoading"
+  (confirm)="guardarPermisos()">
+  <div class="modal-body-content permisos-content">
+    <div class="alert alert-info">
+      <i class="bi bi-info-circle"></i>
+      Seleccione los permisos que desea asignar al rol <strong>{{ rolSeleccionado?.nombre }}</strong>
+    </div>
+
+    <div class="permisos-grid">
+      <!-- Permisos de Vista -->
+      <div class="permiso-group">
+        <h6 class="permiso-group-title">
+          <i class="bi bi-eye"></i> Permisos de Vista
+        </h6>
+        <div class="permiso-list">
+          <div *ngFor="let permiso of getPermisosPorTipo('VISTA')" class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              [id]="'permiso-' + permiso.id"
+              [checked]="isPermisoSeleccionado(permiso.id)"
+              (change)="togglePermiso(permiso.id, $event)"
+            >
+            <label class="form-check-label" [for]="'permiso-' + permiso.id">
+              <strong>{{ permiso.nombre }}</strong>
+              <small class="d-block text-muted">{{ permiso.descripcion }}</small>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Permisos de Acción -->
+      <div class="permiso-group">
+        <h6 class="permiso-group-title">
+          <i class="bi bi-lightning"></i> Permisos de Acción
+        </h6>
+        <div class="permiso-list">
+          <div *ngFor="let permiso of getPermisosPorTipo('ACCION')" class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              [id]="'permiso-' + permiso.id"
+              [checked]="isPermisoSeleccionado(permiso.id)"
+              (change)="togglePermiso(permiso.id, $event)"
+            >
+            <label class="form-check-label" [for]="'permiso-' + permiso.id">
+              <strong>{{ permiso.nombre }}</strong>
+              <small class="d-block text-muted">{{ permiso.descripcion }}</small>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Permisos de Endpoint -->
+      <div class="permiso-group">
+        <h6 class="permiso-group-title">
+          <i class="bi bi-hdd-network"></i> Permisos de Endpoint
+        </h6>
+        <div class="permiso-list">
+          <div *ngFor="let permiso of getPermisosPorTipo('ENDPOINT')" class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              [id]="'permiso-' + permiso.id"
+              [checked]="isPermisoSeleccionado(permiso.id)"
+              (change)="togglePermiso(permiso.id, $event)"
+            >
+            <label class="form-check-label" [for]="'permiso-' + permiso.id">
+              <strong>{{ permiso.nombre }}</strong>
+              <small class="d-block text-muted">{{ permiso.descripcion }}</small>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-modal>
+

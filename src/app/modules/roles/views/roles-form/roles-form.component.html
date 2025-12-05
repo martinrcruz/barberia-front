@@ -1,0 +1,186 @@
+<div class="roles-form-container">
+  <div class="page-header">
+    <h1>
+      <i class="bi bi-shield-check"></i>
+      {{ isEditMode ? 'Editar Rol' : 'Nuevo Rol' }}
+    </h1>
+    <p class="text-muted">{{ isEditMode ? 'Modifica los datos del rol' : 'Completa los datos para crear un nuevo rol' }}</p>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 offset-lg-2">
+      <div class="card">
+        <div class="card-body">
+          <form [formGroup]="rolForm" (ngSubmit)="onSubmit()">
+            <!-- Información Básica -->
+            <div class="form-section">
+              <h5 class="section-title">Información Básica</h5>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="nombre" class="form-label">Nombre *</label>
+                  <input 
+                    type="text" 
+                    id="nombre"
+                    class="form-control" 
+                    formControlName="nombre"
+                    [class.is-invalid]="submitted && f['nombre'].errors"
+                    (blur)="generarCodigo()"
+                    placeholder="Ej: Administrador"
+                  >
+                  <div *ngIf="submitted && f['nombre'].errors" class="invalid-feedback">
+                    <div *ngIf="f['nombre'].errors['required']">El nombre es obligatorio</div>
+                    <div *ngIf="f['nombre'].errors['minlength']">Debe tener al menos 3 caracteres</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label for="codigo" class="form-label">
+                    Código *
+                    <small class="text-muted">(Solo mayúsculas y guión bajo)</small>
+                  </label>
+                  <input 
+                    type="text" 
+                    id="codigo"
+                    class="form-control" 
+                    formControlName="codigo"
+                    [class.is-invalid]="submitted && f['codigo'].errors"
+                    placeholder="Ej: ADMINISTRADOR"
+                    style="text-transform: uppercase;"
+                  >
+                  <div *ngIf="submitted && f['codigo'].errors" class="invalid-feedback">
+                    <div *ngIf="f['codigo'].errors['required']">El código es obligatorio</div>
+                    <div *ngIf="f['codigo'].errors['pattern']">Solo se permiten mayúsculas y guión bajo</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea 
+                  id="descripcion"
+                  class="form-control" 
+                  formControlName="descripcion"
+                  rows="3"
+                  placeholder="Describe las responsabilidades de este rol"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Permisos -->
+            <div class="form-section">
+              <h5 class="section-title">
+                <i class="bi bi-key"></i> Permisos Asignados
+              </h5>
+              <p class="text-muted">Selecciona los permisos que tendrá este rol</p>
+
+              <div class="permisos-grid">
+                <!-- Permisos de Vista -->
+                <div class="permiso-group">
+                  <h6 class="permiso-group-title">
+                    <i class="bi bi-eye"></i> Permisos de Vista
+                  </h6>
+                  <div class="permiso-list">
+                    <div *ngFor="let permiso of getPermisosPorTipo('VISTA')" class="form-check">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        [id]="'permiso-' + permiso.id"
+                        [checked]="isPermisoSeleccionado(permiso.id)"
+                        (change)="togglePermiso(permiso.id, $event)"
+                      >
+                      <label class="form-check-label" [for]="'permiso-' + permiso.id">
+                        <strong>{{ permiso.nombre }}</strong>
+                        <small class="d-block text-muted">{{ permiso.descripcion }}</small>
+                      </label>
+                    </div>
+                    <div *ngIf="getPermisosPorTipo('VISTA').length === 0" class="text-muted text-center">
+                      No hay permisos de vista disponibles
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Permisos de Acción -->
+                <div class="permiso-group">
+                  <h6 class="permiso-group-title">
+                    <i class="bi bi-lightning"></i> Permisos de Acción
+                  </h6>
+                  <div class="permiso-list">
+                    <div *ngFor="let permiso of getPermisosPorTipo('ACCION')" class="form-check">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        [id]="'permiso-' + permiso.id"
+                        [checked]="isPermisoSeleccionado(permiso.id)"
+                        (change)="togglePermiso(permiso.id, $event)"
+                      >
+                      <label class="form-check-label" [for]="'permiso-' + permiso.id">
+                        <strong>{{ permiso.nombre }}</strong>
+                        <small class="d-block text-muted">{{ permiso.descripcion }}</small>
+                      </label>
+                    </div>
+                    <div *ngIf="getPermisosPorTipo('ACCION').length === 0" class="text-muted text-center">
+                      No hay permisos de acción disponibles
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Permisos de Endpoint -->
+                <div class="permiso-group">
+                  <h6 class="permiso-group-title">
+                    <i class="bi bi-hdd-network"></i> Permisos de Endpoint
+                  </h6>
+                  <div class="permiso-list">
+                    <div *ngFor="let permiso of getPermisosPorTipo('ENDPOINT')" class="form-check">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        [id]="'permiso-' + permiso.id"
+                        [checked]="isPermisoSeleccionado(permiso.id)"
+                        (change)="togglePermiso(permiso.id, $event)"
+                      >
+                      <label class="form-check-label" [for]="'permiso-' + permiso.id">
+                        <strong>{{ permiso.nombre }}</strong>
+                        <small class="d-block text-muted">{{ permiso.descripcion }}</small>
+                      </label>
+                    </div>
+                    <div *ngIf="getPermisosPorTipo('ENDPOINT').length === 0" class="text-muted text-center">
+                      No hay permisos de endpoint disponibles
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle"></i>
+                <strong>{{ permisosSeleccionados.length }}</strong> permisos seleccionados
+              </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="form-actions">
+              <button 
+                type="button" 
+                class="btn btn-secondary"
+                (click)="cancelar()"
+                [disabled]="loading"
+              >
+                <i class="bi bi-x-circle"></i> Cancelar
+              </button>
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="loading"
+              >
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!loading" class="bi bi-check-circle"></i>
+                {{ isEditMode ? 'Actualizar' : 'Crear' }} Rol
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

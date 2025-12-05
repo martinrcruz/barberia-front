@@ -1,0 +1,90 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  z-index: 1050;
+  
+  &.show {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.modal-dialog {
+  animation: slideDown 0.3s ease-in-out;
+  margin: 1.75rem auto;
+}
+
+.modal-content {
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  background-color: #08415C;
+  color: white;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  
+  .modal-title {
+    font-weight: 600;
+  }
+  
+  .btn-close {
+    filter: invert(1);
+    opacity: 0.8;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  gap: 0.5rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 0.5rem;
+    width: calc(100% - 1rem);
+  }
+}
+

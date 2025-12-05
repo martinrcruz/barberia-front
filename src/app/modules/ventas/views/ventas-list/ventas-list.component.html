@@ -1,0 +1,241 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Gestión de Ventas</h2>
+      <p class="text-muted mb-0">Consulta y gestiona las ventas realizadas</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row align-items-end">
+        <div class="col-md-4">
+          <label for="filtroSucursal" class="form-label">Filtrar por Sucursal</label>
+          <select class="form-select" id="filtroSucursal" [(ngModel)]="filtroSucursal" (change)="filtrarPorSucursal()">
+            <option [value]="null">Todas las sucursales</option>
+            <option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="filtroCliente" class="form-label">Filtrar por Cliente</label>
+          <select class="form-select" id="filtroCliente" [(ngModel)]="filtroCliente" (change)="filtrarPorCliente()">
+            <option [value]="null">Todos los clientes</option>
+            <option *ngFor="let cliente of clientes" [value]="cliente.id">{{ cliente.nombreCompleto }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary w-100" (click)="limpiarFiltro()" *ngIf="filtroSucursal || filtroCliente">
+            <i class="bi bi-x-circle me-2"></i>
+            Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerta de error -->
+  <div class="alert alert-danger" *ngIf="error" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Tabla de ventas -->
+  <div class="card" *ngIf="!cargando && ventasFiltradas.length > 0">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>N° Venta</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Trabajador</th>
+              <th>Sucursal</th>
+              <th>Subtotal</th>
+              <th>IVA</th>
+              <th>Total</th>
+              <th>Método Pago</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let venta of ventasFiltradas">
+              <td><strong>{{ venta.numeroVenta }}</strong></td>
+              <td>{{ formatearFecha(venta.fechaVenta) }}</td>
+              <td>
+                <span *ngIf="venta.clienteNombre; else sinCliente" class="badge bg-primary">
+                  {{ venta.clienteNombre }}
+                </span>
+                <ng-template #sinCliente>
+                  <span class="text-muted">Sin cliente</span>
+                </ng-template>
+              </td>
+              <td>{{ venta.trabajadorNombre }}</td>
+              <td>{{ venta.sucursalNombre }}</td>
+              <td>{{ formatearPrecio(venta.subtotal) }}</td>
+              <td>{{ formatearPrecio(venta.iva) }}</td>
+              <td><strong class="text-success">{{ formatearPrecio(venta.total) }}</strong></td>
+              <td>
+                <span class="badge bg-info">{{ venta.metodoPago }}</span>
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-outline-primary" (click)="verDetalle(venta)" title="Ver Detalle">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-success" (click)="descargarComprobante(venta)" title="Descargar Comprobante">
+                    <i class="bi bi-download"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="anularVenta(venta)" title="Anular">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="card" *ngIf="!cargando && ventasFiltradas.length === 0">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-cart4 fs-1 text-muted mb-3"></i>
+      <h5>No hay ventas registradas</h5>
+      <p class="text-muted">Las ventas realizadas aparecerán aquí</p>
+    </div>
+  </div>
+
+  <!-- Cargando -->
+  <div class="text-center py-5" *ngIf="cargando">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <!-- Modal de detalle -->
+  <div class="modal fade show d-block" *ngIf="mostrarDetalle && ventaSeleccionada" style="background-color: rgba(0,0,0,0.5);" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Detalle de Venta: {{ ventaSeleccionada.numeroVenta }}</h5>
+          <button type="button" class="btn-close" (click)="cerrarDetalle()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Fecha:</strong> {{ formatearFecha(ventaSeleccionada.fechaVenta) }}
+            </div>
+            <div class="col-md-6">
+              <strong>Trabajador:</strong> {{ ventaSeleccionada.trabajadorNombre }}
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Sucursal:</strong> {{ ventaSeleccionada.sucursalNombre }}
+            </div>
+            <div class="col-md-6">
+              <strong>Método de Pago:</strong> {{ ventaSeleccionada.metodoPago }}
+            </div>
+          </div>
+          <!-- Datos del Cliente -->
+          <div class="row mb-3" *ngIf="ventaSeleccionada.clienteNombre">
+            <div class="col-12">
+              <hr>
+              <h6 class="mb-3"><i class="bi bi-person"></i> Datos del Cliente</h6>
+              <div class="card bg-light">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <strong>Nombre:</strong> {{ ventaSeleccionada.clienteNombre }}
+                    </div>
+                    <div class="col-md-6 mb-2" *ngIf="clienteSeleccionado?.rut">
+                      <strong>RUT:</strong> {{ clienteSeleccionado?.rut }}
+                    </div>
+                    <div class="col-md-6 mb-2" *ngIf="clienteSeleccionado?.email">
+                      <strong>Email:</strong> {{ clienteSeleccionado?.email }}
+                    </div>
+                    <div class="col-md-6 mb-2" *ngIf="clienteSeleccionado?.telefono">
+                      <strong>Teléfono:</strong> {{ clienteSeleccionado?.telefono }}
+                    </div>
+                    <div class="col-md-12 mb-2" *ngIf="clienteSeleccionado?.direccion">
+                      <strong>Dirección:</strong> {{ clienteSeleccionado?.direccion }}
+                    </div>
+                    <div class="col-md-12" *ngIf="clienteSeleccionado?.observaciones">
+                      <strong>Observaciones:</strong>
+                      <p class="text-muted mb-0">{{ clienteSeleccionado?.observaciones }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <h6 class="mb-3">Detalles de la Venta</h6>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Descripción</th>
+                  <th>Cantidad</th>
+                  <th>Precio Unit.</th>
+                  <th>Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let detalle of ventaSeleccionada.detalles">
+                  <td>
+                    <span class="badge" [class.bg-primary]="detalle.tipoItem === 'PRODUCTO'" [class.bg-info]="detalle.tipoItem === 'SERVICIO'">
+                      {{ detalle.tipoItem }}
+                    </span>
+                  </td>
+                  <td>{{ detalle.descripcion }}</td>
+                  <td>{{ detalle.cantidad }}</td>
+                  <td>{{ formatearPrecio(detalle.precioUnitario) }}</td>
+                  <td>{{ formatearPrecio(detalle.subtotal) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-md-6 offset-md-6">
+              <div class="d-flex justify-content-between mb-2">
+                <strong>Subtotal:</strong>
+                <span>{{ formatearPrecio(ventaSeleccionada.subtotal) }}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <strong>IVA:</strong>
+                <span>{{ formatearPrecio(ventaSeleccionada.iva) }}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <strong>Comisión Trabajador:</strong>
+                <span>{{ formatearPrecio(ventaSeleccionada.comisionTrabajador) }}</span>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between">
+                <strong class="fs-5">Total:</strong>
+                <strong class="fs-5 text-success">{{ formatearPrecio(ventaSeleccionada.total) }}</strong>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3" *ngIf="ventaSeleccionada.observaciones">
+            <strong>Observaciones:</strong>
+            <p class="text-muted">{{ ventaSeleccionada.observaciones }}</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
+          <button type="button" class="btn btn-primary" (click)="descargarComprobante(ventaSeleccionada)">
+            <i class="bi bi-download me-2"></i>
+            Descargar Comprobante
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

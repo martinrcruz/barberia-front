@@ -1,0 +1,83 @@
+<div class="configuracion-page">
+  <h2>Configuración del sistema</h2>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="mensaje" class="alert alert-success">
+    {{ mensaje }}
+  </div>
+
+  <div *ngIf="cargando" class="loading">
+    Cargando configuraciones...
+  </div>
+
+  <table *ngIf="!cargando && configuraciones.length > 0" class="tabla-config">
+    <thead>
+      <tr>
+        <th>Clave</th>
+        <th>Descripción</th>
+        <th>Categoría</th>
+        <th>Valor</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let config of configuraciones">
+        <td>{{ config.clave }}</td>
+        <td>{{ config.descripcion }}</td>
+        <td>{{ config.categoria }}</td>
+        <td>
+          <ng-container *ngIf="configuracionEditando?.id === config.id; else soloLectura">
+            <input
+              type="text"
+              [(ngModel)]="valorEditando"
+              [disabled]="guardando"
+            />
+          </ng-container>
+          <ng-template #soloLectura>
+            {{ config.valor }}
+          </ng-template>
+        </td>
+        <td class="acciones">
+          <ng-container *ngIf="configuracionEditando?.id === config.id; else botonEditar">
+            <button
+              class="btn btn-sm btn-primary me-1"
+              type="button"
+              (click)="guardarCambios()"
+              [disabled]="guardando"
+            >
+              Guardar
+            </button>
+            <button
+              class="btn btn-sm btn-secondary"
+              type="button"
+              (click)="cancelarEdicion()"
+              [disabled]="guardando"
+            >
+              Cancelar
+            </button>
+          </ng-container>
+          <ng-template #botonEditar>
+            <button
+              class="btn btn-sm btn-outline-primary"
+              type="button"
+              (click)="iniciarEdicion(config)"
+              [disabled]="guardando"
+            >
+              Editar
+            </button>
+          </ng-template>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!cargando && configuraciones.length === 0" class="sin-datos">
+    No hay configuraciones editables para mostrar.
+  </div>
+</div>
+
+
+

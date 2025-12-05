@@ -1,0 +1,101 @@
+.contabilidad-page {
+  h2 {
+    margin-bottom: 1.5rem;
+  }
+
+  .filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+
+    .campo {
+      display: flex;
+      flex-direction: column;
+
+      label {
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+      }
+
+      input,
+      select {
+        padding: 0.35rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    .card {
+      padding: 1rem;
+      border-radius: 8px;
+      color: #fff;
+
+      h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+      }
+
+      p {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      &.ingreso {
+        background-color: #198754;
+      }
+
+      &.egreso {
+        background-color: #dc3545;
+      }
+
+      &.balance {
+        background-color: #0d6efd;
+
+        &.negativo {
+          background-color: #dc3545;
+        }
+      }
+    }
+  }
+
+  .tabla-registros {
+    overflow-x: auto;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+
+      th,
+      td {
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid #dee2e6;
+        white-space: nowrap;
+      }
+
+      th {
+        background-color: #f8f9fa;
+        text-align: left;
+      }
+    }
+  }
+
+  .sin-datos {
+    margin-top: 1rem;
+    color: #6c757d;
+    font-style: italic;
+  }
+}
+
+

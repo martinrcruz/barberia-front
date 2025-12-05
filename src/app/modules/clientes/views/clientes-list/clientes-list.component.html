@@ -1,0 +1,141 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Gestión de Clientes</h2>
+      <p class="text-muted mb-0">Administra los clientes de la barbería</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirFormularioCrear()" [disabled]="cargando">
+      <i class="bi bi-plus-circle me-2"></i>
+      Nuevo Cliente
+    </button>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    {{ error }}
+  </div>
+
+  <div class="card" *ngIf="!cargando && clientes.length > 0">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>RUT</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th>Dirección</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cliente of clientes">
+              <td><strong>{{ cliente.nombreCompleto }}</strong></td>
+              <td>{{ cliente.rut || '-' }}</td>
+              <td>{{ cliente.email || '-' }}</td>
+              <td>{{ cliente.telefono || '-' }}</td>
+              <td>
+                <small class="text-muted">{{ cliente.direccion || '-' }}</small>
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-outline-primary" (click)="abrirFormularioEditar(cliente)" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="eliminar(cliente)" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" *ngIf="!cargando && clientes.length === 0">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-people fs-1 text-muted mb-3"></i>
+      <h5>No hay clientes registrados</h5>
+      <p class="text-muted">Los clientes que registres aparecerán aquí</p>
+    </div>
+  </div>
+
+  <div class="text-center py-5" *ngIf="cargando">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <!-- Modal de formulario -->
+  <div
+    class="modal fade show d-block"
+    *ngIf="mostrarFormulario"
+    style="background-color: rgba(0,0,0,0.5);"
+    tabindex="-1"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            {{ modoEdicion ? 'Editar Cliente' : 'Nuevo Cliente' }}
+          </h5>
+          <button type="button" class="btn-close" (click)="cerrarFormulario()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="formulario">
+            <div class="mb-3">
+              <label class="form-label">Nombre Completo</label>
+              <input type="text" class="form-control" formControlName="nombreCompleto" />
+              <small class="text-danger" *ngIf="getFieldError('nombreCompleto')">
+                {{ getFieldError('nombreCompleto') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">RUT</label>
+              <input type="text" class="form-control" formControlName="rut" />
+              <small class="text-danger" *ngIf="getFieldError('rut')">
+                {{ getFieldError('rut') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" formControlName="email" />
+              <small class="text-danger" *ngIf="getFieldError('email')">
+                {{ getFieldError('email') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Teléfono</label>
+              <input type="text" class="form-control" formControlName="telefono" />
+              <small class="text-danger" *ngIf="getFieldError('telefono')">
+                {{ getFieldError('telefono') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Dirección</label>
+              <input type="text" class="form-control" formControlName="direccion" />
+              <small class="text-danger" *ngIf="getFieldError('direccion')">
+                {{ getFieldError('direccion') }}
+              </small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Observaciones</label>
+              <textarea class="form-control" rows="2" formControlName="observaciones"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarFormulario()">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="guardar()">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

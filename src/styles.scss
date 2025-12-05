@@ -1,0 +1,226 @@
+@use "sass:color";
+
+/* Paleta de colores BarberiApp */
+$primary-color: #08415C;
+$secondary-color: #EF6461;
+$light-color: #D5DFE5;
+$white: #FFFFFF;
+
+:root {
+  --primary-color: #{$primary-color};
+  --secondary-color: #{$secondary-color};
+  --light-color: #{$light-color};
+  --white: #{$white};
+}
+
+/* Reset y estilos globales */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: #f5f5f5;
+}
+
+/* Estilos de Material Design personalizados */
+@import '@angular/material/prebuilt-themes/deeppurple-amber.css';
+
+/* Sobrescribir colores de Material con la paleta personalizada */
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-fab.mat-primary,
+.mat-mdc-mini-fab.mat-primary {
+  --mdc-protected-button-container-color: #{$primary-color};
+  --mdc-protected-button-label-text-color: #{$white};
+}
+
+.mat-mdc-raised-button.mat-accent,
+.mat-mdc-fab.mat-accent,
+.mat-mdc-mini-fab.mat-accent {
+  --mdc-protected-button-container-color: #{$secondary-color};
+  --mdc-protected-button-label-text-color: #{$white};
+}
+
+/* Utilidades */
+.text-primary {
+  color: $primary-color !important;
+}
+
+.text-secondary {
+  color: $secondary-color !important;
+}
+
+.bg-primary {
+  background-color: $primary-color !important;
+}
+
+.bg-secondary {
+  background-color: $secondary-color !important;
+}
+
+.bg-light {
+  background-color: $light-color !important;
+}
+
+/* Animaciones sutiles */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tarjetas */
+.card {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+}
+
+/* Botones personalizados */
+.btn-primary {
+  background-color: $primary-color;
+  border-color: $primary-color;
+
+  &:hover {
+    background-color: color.adjust($primary-color, $lightness: -10%);
+    border-color: color.adjust($primary-color, $lightness: -10%);
+  }
+}
+
+.btn-secondary {
+  background-color: $secondary-color;
+  border-color: $secondary-color;
+
+  &:hover {
+    background-color: color.adjust($secondary-color, $lightness: -10%);
+    border-color: color.adjust($secondary-color, $lightness: -10%);
+  }
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $primary-color;
+  border-radius: 4px;
+
+  &:hover {
+    background: color.adjust($primary-color, $lightness: -10%);
+  }
+}
+
+/* Tablas responsivas */
+.table-responsive {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table {
+  margin-bottom: 0;
+
+  thead {
+    background-color: $primary-color;
+    color: $white;
+  }
+
+  tbody tr {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba($primary-color, 0.05);
+    }
+  }
+}
+
+/* Formularios */
+.form-control,
+.form-select {
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+  }
+}
+
+.form-label {
+  font-weight: 500;
+  color: $primary-color;
+  margin-bottom: 0.5rem;
+}
+
+/* Alertas */
+.alert {
+  border-radius: 8px;
+  border: none;
+}
+
+/* Badges */
+.badge {
+  border-radius: 4px;
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+/* Loader */
+.loader {
+  border: 3px solid $light-color;
+  border-top: 3px solid $primary-color;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+  }
+}
+

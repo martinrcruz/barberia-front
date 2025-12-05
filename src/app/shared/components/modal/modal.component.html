@@ -1,0 +1,45 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="onBackdropClick()"></div>
+
+<div class="modal" [class.show]="isOpen" [class.d-block]="isOpen" tabindex="-1">
+  <div class="modal-dialog" [class]="'modal-' + size" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header" *ngIf="showHeader">
+        <h5 class="modal-title">{{ title }}</h5>
+        <button 
+          type="button" 
+          class="btn-close" 
+          (click)="closeModal()"
+          [disabled]="loading"
+        ></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <ng-content></ng-content>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer" *ngIf="showFooter">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="onCancel()"
+          [disabled]="loading"
+        >
+          {{ cancelText }}
+        </button>
+        <button 
+          type="button" 
+          [class]="'btn btn-' + confirmColor" 
+          (click)="onConfirm()"
+          [disabled]="loading"
+        >
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

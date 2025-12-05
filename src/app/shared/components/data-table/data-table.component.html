@@ -1,0 +1,136 @@
+<div class="data-table-wrapper">
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    <div class="toolbar-left">
+      <input 
+        type="text" 
+        class="form-control search-input" 
+        placeholder="Buscar..." 
+        [(ngModel)]="searchGlobal"
+        (input)="onFilter('global', searchGlobal)"
+      >
+    </div>
+    <div class="toolbar-right">
+      <button 
+        *ngIf="exportable" 
+        class="btn btn-outline-secondary btn-sm me-2"
+        (click)="onExport('excel')"
+      >
+        <i class="bi bi-file-excel"></i> Excel
+      </button>
+      <button 
+        *ngIf="exportable" 
+        class="btn btn-outline-secondary btn-sm"
+        (click)="onExport('pdf')"
+      >
+        <i class="bi bi-file-pdf"></i> PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-hover table-striped">
+      <thead>
+        <tr>
+          <th *ngIf="selectable">
+            <input 
+              type="checkbox" 
+              (change)="onSelectAll($event)"
+              [checked]="selectedRows.length === data.length && data.length > 0"
+            >
+          </th>
+          <th 
+            *ngFor="let col of columns" 
+            [class.sortable]="col.sortable"
+            (click)="col.sortable ? onSort(col.field) : null"
+          >
+            {{ col.header }}
+            <i 
+              *ngIf="col.sortable && sortField === col.field" 
+              class="bi"
+              [class.bi-arrow-up]="sortOrder === 'asc'"
+              [class.bi-arrow-down]="sortOrder === 'desc'"
+            ></i>
+          </th>
+          <th *ngIf="actions.length > 0">Acciones</th>
+        </tr>
+      </thead>
+      <tbody *ngIf="!loading && data.length > 0">
+        <tr *ngFor="let row of data">
+          <td *ngIf="selectable">
+            <input 
+              type="checkbox" 
+              [checked]="isSelected(row)"
+              (change)="onSelectRow(row, $event)"
+            >
+          </td>
+          <td *ngFor="let col of columns">
+            <ng-container *ngIf="!col.customTemplate">
+              {{ getFieldValue(row, col.field) }}
+            </ng-container>
+            <ng-container *ngIf="col.customTemplate">
+              <ng-container *ngTemplateOutlet="col.customTemplate; context: { $implicit: row }"></ng-container>
+            </ng-container>
+          </td>
+          <td *ngIf="actions.length > 0">
+            <div class="btn-group btn-group-sm">
+              <button 
+                *ngFor="let action of actions"
+                [hidden]="!canShowAction(action, row)"
+                class="btn"
+                [class]="'btn-' + (action.color || 'primary')"
+                [title]="action.label"
+                (click)="action.handler(row)"
+              >
+                <i [class]="'bi bi-' + action.icon"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+      <tbody *ngIf="loading">
+        <tr>
+          <td [colSpan]="columns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)" class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+      <tbody *ngIf="!loading && data.length === 0">
+        <tr>
+          <td [colSpan]="columns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)" class="text-center">
+            No hay datos disponibles
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="paginated && totalRecords > 0" class="table-pagination">
+    <nav>
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="currentPage === 0">
+          <button class="page-link" (click)="onPageChange(currentPage - 1)">Anterior</button>
+        </li>
+        <li 
+          *ngFor="let page of pages" 
+          class="page-item"
+          [class.active]="page === currentPage"
+        >
+          <button class="page-link" (click)="onPageChange(page)">{{ page + 1 }}</button>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+          <button class="page-link" (click)="onPageChange(currentPage + 1)">Siguiente</button>
+        </li>
+      </ul>
+    </nav>
+    <div class="pagination-info">
+      Mostrando {{ (currentPage * pageSize) + 1 }} - 
+      {{ Math.min((currentPage + 1) * pageSize, totalRecords) }} de {{ totalRecords }} registros
+    </div>
+  </div>
+</div>
+

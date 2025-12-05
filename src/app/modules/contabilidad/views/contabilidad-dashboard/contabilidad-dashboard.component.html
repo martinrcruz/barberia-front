@@ -1,0 +1,82 @@
+<div class="contabilidad-page">
+  <h2>Contabilidad</h2>
+
+  <div class="filtros">
+    <div class="campo">
+      <label>Sucursal</label>
+      <select [(ngModel)]="sucursalSeleccionada" (change)="cargarDatos()">
+        <option *ngFor="let sucursal of sucursales" [value]="sucursal.id">
+          {{ sucursal.nombre }}
+        </option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Fecha inicio</label>
+      <input type="datetime-local" [(ngModel)]="fechaInicio" (change)="cargarDatos()" />
+    </div>
+
+    <div class="campo">
+      <label>Fecha fin</label>
+      <input type="datetime-local" [(ngModel)]="fechaFin" (change)="cargarDatos()" />
+    </div>
+
+    <button class="btn btn-secondary" type="button" (click)="limpiarFechas()">
+      Limpiar fechas
+    </button>
+    <button class="btn btn-success" type="button" (click)="exportarPDF()" [disabled]="cargando || !sucursalSeleccionada">
+      <i class="bi bi-file-pdf"></i> Exportar PDF
+    </button>
+    <button class="btn btn-primary" type="button" (click)="exportarExcel()" [disabled]="cargando || !sucursalSeleccionada">
+      <i class="bi bi-file-excel"></i> Exportar Excel
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="resumen" class="resumen">
+    <div class="card ingreso">
+      <h3>Ingresos</h3>
+      <p>{{ formatearMonto(resumen.totalIngresos) }}</p>
+    </div>
+    <div class="card egreso">
+      <h3>Egresos</h3>
+      <p>{{ formatearMonto(resumen.totalEgresos) }}</p>
+    </div>
+    <div class="card balance" [class.negativo]="resumen.balance < 0">
+      <h3>Balance</h3>
+      <p>{{ formatearMonto(resumen.balance) }}</p>
+    </div>
+  </div>
+
+  <div class="tabla-registros" *ngIf="registros.length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Categoría</th>
+          <th>Descripción</th>
+          <th>Monto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let reg of registros">
+          <td>{{ reg.fechaRegistro | date: 'short' }}</td>
+          <td>{{ reg.tipoRegistro }}</td>
+          <td>{{ reg.categoria }}</td>
+          <td>{{ reg.descripcion }}</td>
+          <td>{{ formatearMonto(reg.monto) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!cargando && registros.length === 0" class="sin-datos">
+    No hay registros contables para los filtros seleccionados.
+  </div>
+</div>
+
+
